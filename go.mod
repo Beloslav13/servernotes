@@ -7,4 +7,7 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 )
 
-require golang.org/x/sys v0.2.0 // indirect
+require (
+	github.com/joho/godotenv v1.4.0 // indirect
+	golang.org/x/sys v0.2.0 // indirect
+)

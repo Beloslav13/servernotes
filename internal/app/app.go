@@ -7,5 +7,6 @@ import (
 
 func Run() {
 	log := logger.GetLogger()
+	// s := os.Getenv("TESTIK")
 	transport.StartServer(log)
 }
