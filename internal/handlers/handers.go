@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/beloslav13/servernotes/internal/transport/interfaces"
+	"github.com/beloslav13/servernotes/internal/interfaces"
 	"github.com/beloslav13/servernotes/pkg/logger"
 	"github.com/gorilla/mux"
 )
@@ -20,8 +20,8 @@ func NewHandler(log logger.Logger) interfaces.Handler {
 }
 
 func (h *handler) Register(router *mux.Router) {
-	router.HandleFunc("/", h.HomeHandler).Methods("GET")
-	router.HandleFunc("/notes/{id}/", h.GetNotes)
+	router.HandleFunc("/", h.HomeHandler)
+	router.HandleFunc("/notes/{id}/", h.GetNotes).Methods("GET")
 	http.Handle("/", router)
 }
 

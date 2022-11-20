@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/beloslav13/servernotes/internal/transport/handlers"
+	"github.com/beloslav13/servernotes/internal/handlers"
 	"github.com/beloslav13/servernotes/pkg/logger"
 	"github.com/gorilla/mux"
 )
