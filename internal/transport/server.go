@@ -4,14 +4,15 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/beloslav13/servernotes/internal/database"
 	"github.com/beloslav13/servernotes/internal/handlers"
 	"github.com/beloslav13/servernotes/pkg/logger"
 	"github.com/gorilla/mux"
 )
 
-func StartServer(log logger.Logger) {
+func StartServer(log logger.Logger, db *database.Storage) {
 	router := mux.NewRouter()
-	handler := handlers.NewHandler(log)
+	handler := handlers.NewHandler(log, db)
 	handler.Register(router)
 	log.Infoln("Start server")
 

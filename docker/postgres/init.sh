@@ -13,6 +13,28 @@ CREATE TABLE IF NOT EXISTS persons(
     tg_user_id bigint not null UNIQUE,
     username varchar(255) not null UNIQUE,
     created timestamp default current_timestamp
-    );
+);
 INSERT INTO persons(tg_user_id, username) VALUES (128, 'Ivan');
+
+
+CREATE TABLE categories(
+    id serial primary key,
+    person_id int,
+    FOREIGN KEY (person_id) REFERENCES persons(id) ON DELETE CASCADE,
+    name varchar(255) not null UNIQUE,
+    created timestamp default current_timestamp
+);
+INSERT INTO categories (person_id, name) VALUES (1, 'Другое');
+
+CREATE TABLE notes(
+    id serial primary key,
+    person_id int,
+    FOREIGN KEY (person_id) REFERENCES persons(id) ON DELETE CASCADE,
+    category_id int,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE,
+    name text not null,
+    created timestamp default current_timestamp
+);
+INSERT INTO notes (person_id, category_id, name) VALUES (1, 1, 'https://google.com');
+
 EOF

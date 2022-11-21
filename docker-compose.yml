@@ -19,11 +19,11 @@ services:
       build:
         context: .
         dockerfile: Dockerfile
-      command: /go/notes
-      # command:
-      #   - /bin/bash
-      #   - '-c'
-      #   - sleep 1d
+      # command: /go/notes
+      command:
+        - /bin/bash
+        - '-c'
+        - go run cmd/app/main.go
       volumes:
         - .:/app
       ports:
