@@ -14,6 +14,7 @@ type Storage struct {
 	db  *sql.DB
 }
 
+// TODO: Возможно стоит сделать не экспортируемой. и вызывать каждый раз при новом запросе, что бы в конце запросе закрывать соединение
 func New(log logger.Logger) (*Storage, error) {
 	// connStr := "postgresql://admin:devpass@localhost:5436/servernotes_db?sslmode=disable" // postgresql://localhost:5432/servernotes_db
 	connStr := "user=admin password=devpass dbname=servernotes_db sslmode=disable host=db port=5432" // postgresql://localhost:5432/servernotes_db
