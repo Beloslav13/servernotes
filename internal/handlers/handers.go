@@ -4,14 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
-
 	"github.com/beloslav13/servernotes/internal/database"
 	"github.com/beloslav13/servernotes/internal/interfaces"
 	"github.com/beloslav13/servernotes/internal/models"
 	"github.com/beloslav13/servernotes/pkg/logger"
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
+	"net/http"
+	"strconv"
 )
 
 var httpContext = context.Background()
@@ -29,7 +29,7 @@ func NewHandler(log logger.Logger) interfaces.Handler {
 func (h *handler) Register(router *mux.Router) {
 	router.HandleFunc("/", h.HomeHandler)
 	router.HandleFunc("/notes/", h.CreateNote).Methods("POST")
-	router.HandleFunc("/notes/{id}/", h.GetNote).Methods("GET")
+	router.HandleFunc("/notes/{id:[0-9]+}/", h.GetNote).Methods("GET")
 	http.Handle("/", router)
 }
 
@@ -40,14 +40,28 @@ func (h *handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) GetNote(w http.ResponseWriter, r *http.Request) {
-	h.logger.Infoln("WOW NOTES!!!")
+	h.logger.Infoln("Handler GetNote")
+	w.Header().Set("Content-Type", "application/json")
 	vars := mux.Vars(r)
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "Notes: %v\n", vars["id"])
+	sid, ok := vars["id"]
+	if !ok {
+		h.logger.Errorf("id does not exit in vars: %v", vars)
+		return
+	}
+
+	id, _ := strconv.Atoi(sid)
+	note, err := database.GetNote(httpContext, id)
+	if err != nil {
+		h.logger.Errorf("handler GetNote error get: %s. id: %d", err.Error(), id)
+		response(w, fmt.Sprintf("cannot get note with id: %d", id), http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+	//h.logger.Infof("%+v", note)
+	response(w, "get ok", http.StatusOK, nil, note)
 }
 
 func (h *handler) CreateNote(w http.ResponseWriter, r *http.Request) {
-	h.logger.Infoln("Handler create note...")
+	h.logger.Infoln("Handler CreateNote")
 	w.Header().Set("Content-Type", "application/json")
 
 	var note models.Note
@@ -58,13 +72,13 @@ func (h *handler) CreateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := database.SaveNotes(httpContext, &note); err != nil {
+	if err := database.SaveNote(httpContext, &note); err != nil {
 		h.logger.Errorf("handler cannot save: %w\ndata: %w", err, note)
-		response(w, "handler cannot save...", http.StatusBadRequest, err.Error())
+		response(w, "handler cannot save...", http.StatusBadRequest, err.Error(), nil)
 		return
 	}
 	// Заметка создана в бд без ошибок, создаём json ответ
-	response(w, "save ok", http.StatusCreated, nil)
+	response(w, "save ok", http.StatusCreated, nil, note)
 }
 
 // validateCreateNote validates structure completion
@@ -73,15 +87,19 @@ func validateCreateNote(w http.ResponseWriter, note models.Note, h *handler) boo
 	err := validate.Struct(note)
 	if err != nil {
 		h.logger.Errorln(err)
-		response(w, "failed to validate struct", http.StatusBadRequest, err.Error())
+		response(w, "failed to validate struct", http.StatusBadRequest, err.Error(), nil)
 		return true
 	}
 	return false
 }
 
 // response creates json response
-func response(w http.ResponseWriter, msg string, status int, err interface{}) {
-	resp := models.NewResponse(false, msg, err)
+func response(w http.ResponseWriter, msg string, status int, err, obj interface{}) {
+	var res bool
+	if err == nil {
+		res = true
+	}
+	resp := models.NewResponse(res, msg, err, obj)
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(resp)
 }
