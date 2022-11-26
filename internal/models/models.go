@@ -16,8 +16,16 @@ type Note struct {
 	Name       string `json:"name" validate:"required"`
 }
 
-type Response struct {
+type response struct {
 	Result  bool        `json:"result"`
 	Message string      `json:"message,omitempty"`
 	Err     interface{} `json:"error"`
+}
+
+func NewResponse(result bool, message string, err interface{}) response {
+	return response{
+		Result:  result,
+		Message: message,
+		Err:     err,
+	}
 }
