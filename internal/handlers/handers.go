@@ -29,7 +29,7 @@ func NewHandler(log logger.Logger) interfaces.Handler {
 func (h *handler) Register(router *mux.Router) {
 	router.HandleFunc("/", h.HomeHandler)
 	router.HandleFunc("/notes/", h.CreateNote).Methods("POST")
-	router.HandleFunc("/notes/{id}/", h.GetNotes).Methods("GET")
+	router.HandleFunc("/notes/{id}/", h.GetNote).Methods("GET")
 	http.Handle("/", router)
 }
 
@@ -39,7 +39,7 @@ func (h *handler) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Gorilla!\n"))
 }
 
-func (h *handler) GetNotes(w http.ResponseWriter, r *http.Request) {
+func (h *handler) GetNote(w http.ResponseWriter, r *http.Request) {
 	h.logger.Infoln("WOW NOTES!!!")
 	vars := mux.Vars(r)
 	w.WriteHeader(http.StatusOK)
@@ -53,11 +53,8 @@ func (h *handler) CreateNote(w http.ResponseWriter, r *http.Request) {
 	var note models.Note
 	_ = json.NewDecoder(r.Body).Decode(&note)
 
-	validate := validator.New()
-	err := validate.Struct(note)
-	if err != nil {
-		h.logger.Errorln(err)
-		response(w, "failed to validate struct", http.StatusBadRequest, err.Error())
+	// Если валидация структуры прошла успешно, создаём заметку в БД.
+	if validateCreateNote(w, note, h) {
 		return
 	}
 
@@ -66,10 +63,23 @@ func (h *handler) CreateNote(w http.ResponseWriter, r *http.Request) {
 		response(w, "handler cannot save...", http.StatusBadRequest, err.Error())
 		return
 	}
-
+	// Заметка создана в бд без ошибок, создаём json ответ
 	response(w, "save ok", http.StatusCreated, nil)
 }
 
+// validateCreateNote validates structure completion
+func validateCreateNote(w http.ResponseWriter, note models.Note, h *handler) bool {
+	validate := validator.New()
+	err := validate.Struct(note)
+	if err != nil {
+		h.logger.Errorln(err)
+		response(w, "failed to validate struct", http.StatusBadRequest, err.Error())
+		return true
+	}
+	return false
+}
+
+// response creates json response
 func response(w http.ResponseWriter, msg string, status int, err interface{}) {
 	resp := models.NewResponse(false, msg, err)
 	w.WriteHeader(status)
