@@ -15,3 +15,9 @@ type Note struct {
 	CategoryId uint   `json:"category_id" validate:"required"`
 	Name       string `json:"name" validate:"required"`
 }
+
+type Response struct {
+	Result  bool        `json:"result"`
+	Message string      `json:"message,omitempty"`
+	Err     interface{} `json:"error"`
+}

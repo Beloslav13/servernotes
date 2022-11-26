@@ -18,13 +18,11 @@ var httpContext = context.Background()
 
 type handler struct {
 	logger logger.Logger
-	db     *database.Storage
 }
 
-func NewHandler(log logger.Logger, db *database.Storage) interfaces.Handler {
+func NewHandler(log logger.Logger) interfaces.Handler {
 	return &handler{
 		logger: log,
-		db:     db,
 	}
 }
 
@@ -50,9 +48,9 @@ func (h *handler) GetNotes(w http.ResponseWriter, r *http.Request) {
 
 func (h *handler) CreateNote(w http.ResponseWriter, r *http.Request) {
 	h.logger.Infoln("Handler create note...")
-	vars := mux.Vars(r)
-	h.logger.Infoln(vars)
+	w.Header().Set("Content-Type", "application/json")
 
+	resp := models.Response{}
 	var note models.Note
 	_ = json.NewDecoder(r.Body).Decode(&note)
 
@@ -60,10 +58,21 @@ func (h *handler) CreateNote(w http.ResponseWriter, r *http.Request) {
 	err := validate.Struct(note)
 	if err != nil {
 		h.logger.Errorln(err)
-		http.Error(w, "failed to validate struct", http.StatusBadRequest)
+		resp = models.Response{Result: false, Message: "failed to validate struct", Err: err.Error()}
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(resp)
 		return
 	}
 
-	h.db.SaveNotes(httpContext, &note)
+	if err := database.SaveNotes(httpContext, &note); err != nil {
+		h.logger.Errorf("handler cannot save: %w\ndata: %w", err, note)
+		resp = models.Response{Result: false, Message: "handler cannot save...", Err: err.Error()}
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(resp)
+		return
+	}
 
+	w.WriteHeader(http.StatusCreated)
+	resp = models.Response{Result: true, Message: "save ok", Err: nil}
+	json.NewEncoder(w).Encode(resp)
 }
