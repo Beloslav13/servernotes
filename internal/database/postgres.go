@@ -36,21 +36,22 @@ func connectDb() (*sql.DB, error) {
 	return db, nil
 }
 
-func SaveNote(ctx context.Context, n *models.Note) error {
+func CreateNote(ctx context.Context, n *models.Note) (int, error) {
 	db, err := connectDb()
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer db.Close()
 
 	// TODO: Необходимо реализовать запрет на создание одинаковых заметок по name
-	q := `INSERT INTO notes (person_id, category_id, name) VALUES ($1, $2, $3)`
-
-	if _, err := db.ExecContext(ctx, q, n.PersonId, n.CategoryId, n.Name); err != nil {
+	q := `INSERT INTO notes (person_id, category_id, name) VALUES ($1, $2, $3) RETURNING id`
+	var id int
+	if err := db.QueryRowContext(ctx, q, n.PersonId, n.CategoryId, n.Name).Scan(&id); err != nil {
 		log.Errorf("cannot save note: %v", err)
-		return err
+		return 0, err
 	}
-	return nil
+
+	return id, nil
 }
 
 func GetNote(ctx context.Context, id int) (*models.Note, error) {
