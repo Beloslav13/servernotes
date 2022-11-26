@@ -27,37 +27,72 @@ func newConn() (*sql.DB, error) {
 	return db, nil
 }
 
-func SaveNote(ctx context.Context, n *models.Note) error {
+func connectDb() (*sql.DB, error) {
 	db, err := newConn()
-	defer db.Close()
 	if err != nil {
 		log.Errorf("cannot connect database: %w", err)
+		return nil, err
+	}
+	return db, nil
+}
+
+func SaveNote(ctx context.Context, n *models.Note) error {
+	db, err := connectDb()
+	if err != nil {
 		return err
 	}
+	defer db.Close()
+
 	// TODO: Необходимо реализовать запрет на создание одинаковых заметок по name
 	q := `INSERT INTO notes (person_id, category_id, name) VALUES ($1, $2, $3)`
 
 	if _, err := db.ExecContext(ctx, q, n.PersonId, n.CategoryId, n.Name); err != nil {
-		log.Errorf("cannot save note: %w", err)
+		log.Errorf("cannot save note: %v", err)
 		return err
 	}
 	return nil
 }
 
 func GetNote(ctx context.Context, id int) (*models.Note, error) {
-	db, err := newConn()
-	defer db.Close()
+	db, err := connectDb()
 	if err != nil {
-		log.Errorf("cannot connect database: %w", err)
 		return nil, err
 	}
+	defer db.Close()
 
 	var n models.Note
 	q := `SELECT * FROM notes WHERE id = $1`
 
 	if err := db.QueryRowContext(ctx, q, id).Scan(&n.Id, &n.PersonId, &n.CategoryId, &n.Name, &n.Created); err != nil {
-		log.Errorf("err: %v, id: %d", id)
+		log.Errorf("err: %v, id: %d", err, id)
 		return nil, err
 	}
 	return &n, nil
+}
+
+func DeleteNote(ctx context.Context, id int) error {
+	db, err := connectDb()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	// Проверяем есть ли заметка с таким айди
+	var exist bool
+	q := `SELECT id FROM notes WHERE id = $1`
+
+	if err := db.QueryRowContext(ctx, q, id).Scan(&exist); err == sql.ErrNoRows {
+		log.Errorf("err: %v, id: %d", err, id)
+		return err
+	}
+
+	// Если заметка с переданным айди есть - удаляем
+	q = `DELETE FROM notes WHERE id = $1`
+
+	if _, err := db.ExecContext(ctx, q, id); err != nil {
+		log.Errorf("err: %v, id: %d", err, id)
+		return err
+	}
+
+	return nil
 }

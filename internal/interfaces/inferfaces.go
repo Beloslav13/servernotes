@@ -11,4 +11,5 @@ type Handler interface {
 	HomeHandler(w http.ResponseWriter, r *http.Request)
 	GetNote(w http.ResponseWriter, r *http.Request)
 	CreateNote(w http.ResponseWriter, r *http.Request)
+	DeleteNote(w http.ResponseWriter, r *http.Request)
 }
