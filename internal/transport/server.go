@@ -18,7 +18,7 @@ func StartServer(log logger.Logger, db *database.Storage) {
 
 	srv := &http.Server{
 		Handler:      router,
-		Addr:         "0.0.0.0:8080",
+		Addr:         ":8080",
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}

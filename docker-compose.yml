@@ -13,13 +13,14 @@ services:
       - ./docker/postgres/init.sh:/docker-entrypoint-init.d/init.sh
       - ./docker/db:/var/lib/postgresql/data/
     ports:
-      - 5436:5432
+      - "5436:5432"
     restart: always
   app:
       build:
         context: .
         dockerfile: Dockerfile
       # command: /go/notes
+      # TODO: debug
       command:
         - /bin/bash
         - '-c'

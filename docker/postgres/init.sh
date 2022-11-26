@@ -14,8 +14,7 @@ CREATE TABLE IF NOT EXISTS persons(
     username varchar(255) not null UNIQUE,
     created timestamp default current_timestamp
 );
-INSERT INTO persons(tg_user_id, username) VALUES (128, 'Ivan');
-
+INSERT INTO persons(tg_user_id, username) VALUES (459265446, 'Beloslav');
 
 CREATE TABLE categories(
     id serial primary key,
