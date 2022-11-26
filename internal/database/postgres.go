@@ -71,6 +71,36 @@ func GetNote(ctx context.Context, id int) (*models.Note, error) {
 	return &n, nil
 }
 
+func GetAllNotes(ctx context.Context) ([]*models.Note, error) {
+	db, err := connectDb()
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	notes := make([]*models.Note, 0)
+	q := `SELECT * FROM notes ORDER BY id ASC LIMIT 11`
+	rows, err := db.QueryContext(ctx, q)
+	if err != nil {
+		log.Errorf("err: %v", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		note := new(models.Note)
+		if err := rows.Scan(&note.Id, &note.PersonId, &note.CategoryId, &note.Name, &note.Created); err != nil {
+			log.Errorf("err in rows scan: %v", err)
+			continue
+		}
+		notes = append(notes, note)
+	}
+	if err := rows.Err(); err != nil {
+		log.Errorf("err in rows.Err: %v", err)
+	}
+	return notes, nil
+}
+
 func DeleteNote(ctx context.Context, id int) error {
 	db, err := connectDb()
 	if err != nil {

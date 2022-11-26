@@ -26,6 +26,7 @@ func NewHandler(log logger.Logger) interfaces.Handler {
 func (h *handler) Register(router *mux.Router) {
 	router.HandleFunc("/", h.HomeHandler)
 	router.HandleFunc("/notes/", h.CreateNote).Methods("POST")
+	router.HandleFunc("/notes/", h.GetAllNotes).Methods("GET")
 	router.HandleFunc("/notes/{id:[0-9]+}/", h.GetNote).Methods("GET")
 	router.HandleFunc("/notes/{id:[0-9]+}/", h.DeleteNote).Methods("DELETE")
 	http.Handle("/", router)

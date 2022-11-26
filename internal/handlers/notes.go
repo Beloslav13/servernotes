@@ -32,6 +32,19 @@ func (h *handler) GetNote(w http.ResponseWriter, r *http.Request) {
 	response(w, "get ok", http.StatusOK, nil, note)
 }
 
+func (h *handler) GetAllNotes(w http.ResponseWriter, r *http.Request) {
+	h.logger.Infoln("Handler GetAllNotes")
+	w.Header().Set("Content-Type", "application/json")
+
+	notes, err := database.GetAllNotes(httpContext)
+	if err != nil {
+		h.logger.Errorf("handler GetAllNotes error get all: %s", err.Error())
+		response(w, "cannot get all notes:", http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+	response(w, "get all ok", http.StatusOK, nil, notes)
+}
+
 // CreateNote create note in database.
 func (h *handler) CreateNote(w http.ResponseWriter, r *http.Request) {
 	h.logger.Infoln("Handler CreateNote")

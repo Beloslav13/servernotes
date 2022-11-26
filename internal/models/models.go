@@ -23,10 +23,10 @@ type Note struct {
 }
 
 type response struct {
-	Result  bool        `json:"result"`
-	Message string      `json:"message"`
-	Err     interface{} `json:"error"`
-	Obj     interface{} `json:"obj,omitempty"`
+	Result  bool          `json:"result"`
+	Message string        `json:"message"`
+	Err     interface{}   `json:"error"`
+	Obj     []interface{} `json:"obj,omitempty"`
 }
 
 func NewResponse(result bool, message string, err, obj interface{}) response {
@@ -34,6 +34,6 @@ func NewResponse(result bool, message string, err, obj interface{}) response {
 		Result:  result,
 		Message: message,
 		Err:     err,
-		Obj:     obj,
+		Obj:     []interface{}{obj},
 	}
 }
