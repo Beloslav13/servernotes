@@ -8,9 +8,17 @@ import (
 
 type Handler interface {
 	Register(router *mux.Router)
-	HomeHandler(w http.ResponseWriter, r *http.Request)
-	GetNote(w http.ResponseWriter, r *http.Request)
-	GetAllNotes(w http.ResponseWriter, r *http.Request)
-	CreateNote(w http.ResponseWriter, r *http.Request)
-	DeleteNote(w http.ResponseWriter, r *http.Request)
+	Get(w http.ResponseWriter, r *http.Request)
+	GetAll(w http.ResponseWriter, r *http.Request)
+	Create(w http.ResponseWriter, r *http.Request)
+	Delete(w http.ResponseWriter, r *http.Request)
+	Validate(w http.ResponseWriter, m interface{}) bool
+}
+
+type Note interface {
+	Handler
+}
+
+type Person interface {
+	Handler
 }

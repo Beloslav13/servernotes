@@ -11,8 +11,12 @@ import (
 
 func StartServer(log logger.Logger) {
 	router := mux.NewRouter()
-	handler := handlers.NewHandler(log)
-	handler.Register(router)
+	note := handlers.NewNoteHandler(log)
+	person := handlers.NewPersonHandler(log)
+	note.Register(router)
+	log.Infoln("create Note handler...")
+	person.Register(router)
+	log.Infoln("create Person handler...")
 	log.Infoln("Start server")
 
 	srv := &http.Server{

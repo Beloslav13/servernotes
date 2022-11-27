@@ -127,3 +127,21 @@ func DeleteNote(ctx context.Context, id int) error {
 
 	return nil
 }
+
+func CreatePerson(ctx context.Context, p *models.Person) (int, error) {
+	db, err := connectDb()
+	if err != nil {
+		return 0, err
+	}
+	defer db.Close()
+
+	// TODO: Необходимо реализовать запрет на создание одинаковых заметок по name
+	q := `INSERT INTO persons (tg_user_id, Username) VALUES ($1, $2) RETURNING id`
+	var id int
+	if err := db.QueryRowContext(ctx, q, p.TgUserId, p.Username).Scan(&id); err != nil {
+		log.Errorf("cannot save note: %v", err)
+		return 0, err
+	}
+
+	return id, nil
+}
