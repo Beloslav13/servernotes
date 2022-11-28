@@ -1,6 +1,8 @@
 package transport
 
 import (
+	"github.com/beloslav13/servernotes/internal/notes"
+	"github.com/beloslav13/servernotes/internal/person"
 	"net/http"
 	"time"
 
@@ -11,11 +13,13 @@ import (
 
 func StartServer(log logger.Logger) {
 	router := mux.NewRouter()
-	note := handlers.NewNoteHandler(log)
-	person := handlers.NewPersonHandler(log)
-	note.Register(router)
+	noteRepository := notes.NewRepository(log)
+	personRepository := person.NewRepository(log)
+	noteHandler := handlers.NewNoteHandler(noteRepository, log)
+	personHandler := handlers.NewPersonHandler(personRepository, log)
+	noteHandler.Register(router)
 	log.Infoln("create Note handler...")
-	person.Register(router)
+	personHandler.Register(router)
 	log.Infoln("create Person handler...")
 	log.Infoln("Start server")
 

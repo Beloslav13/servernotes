@@ -8,6 +8,10 @@ type Person struct {
 	Username string `json:"username" validate:"required"`
 }
 
+func (p *Person) SetId(id uint) {
+	p.Id = id
+}
+
 type Category struct {
 	Id       uint   `json:"id"`
 	PersonId uint   `json:"person_id" validate:"required"`

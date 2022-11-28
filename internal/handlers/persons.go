@@ -2,18 +2,18 @@ package handlers
 
 import (
 	"encoding/json"
-	"github.com/beloslav13/servernotes/internal/database"
-	"github.com/beloslav13/servernotes/internal/interfaces"
 	"github.com/beloslav13/servernotes/internal/models"
+	pr "github.com/beloslav13/servernotes/internal/person"
 	"github.com/beloslav13/servernotes/pkg/logger"
 	"github.com/gorilla/mux"
 	"net/http"
 )
 
-func NewPersonHandler(log logger.Logger) interfaces.Person {
+func NewPersonHandler(r pr.Repository, log logger.Logger) Person {
 	return &person{
-		handler{
-			logger: log,
+		repository: r,
+		handler: handler{
+			logger: &log,
 		},
 	}
 }
@@ -25,7 +25,7 @@ func (p *person) Register(router *mux.Router) {
 	router.HandleFunc("/persons/{id:[0-9]+}/", p.Delete).Methods("DELETE")
 }
 
-// Create person in database.
+// Create person in postgres.
 func (p *person) Create(w http.ResponseWriter, r *http.Request) {
 	p.logger.Infoln("Handler CreatePerson")
 	w.Header().Set("Content-Type", "application/json")
@@ -37,7 +37,7 @@ func (p *person) Create(w http.ResponseWriter, r *http.Request) {
 	if p.Validate(w, person) {
 		return
 	}
-	id, err := database.CreatePerson(httpContext, &person)
+	id, err := p.repository.Create(httpContext, &person)
 	if err != nil {
 		p.logger.Errorf("handler cannot save: %w\ndata: %w", err, person)
 		response(w, "handler cannot save...", http.StatusBadRequest, err.Error(), nil)

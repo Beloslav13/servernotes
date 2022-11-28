@@ -4,22 +4,49 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/beloslav13/servernotes/internal/models"
+	"github.com/beloslav13/servernotes/internal/notes"
+	p "github.com/beloslav13/servernotes/internal/person"
 	"github.com/beloslav13/servernotes/pkg/logger"
 	"github.com/go-playground/validator/v10"
+	"github.com/gorilla/mux"
 	"net/http"
 )
 
 var httpContext = context.Background()
 
+type Handler interface {
+	Register(router *mux.Router)
+	Get(w http.ResponseWriter, r *http.Request)
+	GetAll(w http.ResponseWriter, r *http.Request)
+	Create(w http.ResponseWriter, r *http.Request)
+	Delete(w http.ResponseWriter, r *http.Request)
+	Validate(w http.ResponseWriter, m interface{}) bool
+	Logger() *logger.Logger
+}
+
+type Note interface {
+	Handler
+}
+
+type Person interface {
+	Handler
+}
+
 type handler struct {
-	logger logger.Logger
+	logger *logger.Logger
+}
+
+func (h handler) Logger() *logger.Logger {
+	return h.logger
 }
 
 type note struct {
+	repository notes.Repository
 	handler
 }
 
 type person struct {
+	repository p.Repository
 	handler
 }
 

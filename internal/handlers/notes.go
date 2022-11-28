@@ -3,19 +3,19 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/beloslav13/servernotes/internal/database"
-	"github.com/beloslav13/servernotes/internal/interfaces"
 	"github.com/beloslav13/servernotes/internal/models"
+	"github.com/beloslav13/servernotes/internal/notes"
 	"github.com/beloslav13/servernotes/pkg/logger"
 	"github.com/gorilla/mux"
 	"net/http"
 	"strconv"
 )
 
-func NewNoteHandler(log logger.Logger) interfaces.Note {
+func NewNoteHandler(r notes.Repository, log logger.Logger) Note {
 	return &note{
-		handler{
-			logger: log,
+		repository: r,
+		handler: handler{
+			logger: &log,
 		},
 	}
 }
@@ -28,7 +28,7 @@ func (n *note) Register(router *mux.Router) {
 	http.Handle("/", router)
 }
 
-// Get note in database.
+// Get note in postgres.
 func (n *note) Get(w http.ResponseWriter, r *http.Request) {
 	n.logger.Infoln("Handler GetNote")
 	w.Header().Set("Content-Type", "application/json")
@@ -40,7 +40,7 @@ func (n *note) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id, _ := strconv.Atoi(sid)
-	note, err := database.GetNote(httpContext, id)
+	note, err := n.repository.Get(httpContext, id)
 	if err != nil {
 		n.logger.Errorf("handler GetNote error get: %s. id: %d", err.Error(), id)
 		response(w, fmt.Sprintf("cannot get note with id: %d", id), http.StatusBadRequest, err.Error(), nil)
@@ -54,7 +54,7 @@ func (n *note) GetAll(w http.ResponseWriter, r *http.Request) {
 	n.logger.Infoln("Handler GetAllNotes")
 	w.Header().Set("Content-Type", "application/json")
 
-	notes, err := database.GetAllNotes(httpContext)
+	notes, err := n.repository.GetAll(httpContext)
 	if err != nil {
 		n.logger.Errorf("handler GetAllNotes error get all: %s", err.Error())
 		response(w, "cannot get all notes:", http.StatusBadRequest, err.Error(), nil)
@@ -63,7 +63,7 @@ func (n *note) GetAll(w http.ResponseWriter, r *http.Request) {
 	response(w, "get all ok", http.StatusOK, nil, notes)
 }
 
-// Create note in database.
+// Create note in postgres.
 func (n *note) Create(w http.ResponseWriter, r *http.Request) {
 	n.logger.Infoln("Handler CreateNote")
 	w.Header().Set("Content-Type", "application/json")
@@ -75,7 +75,7 @@ func (n *note) Create(w http.ResponseWriter, r *http.Request) {
 	if n.Validate(w, note) {
 		return
 	}
-	id, err := database.CreateNote(httpContext, &note)
+	id, err := n.repository.Create(httpContext, &note)
 	if err != nil {
 		n.logger.Errorf("handler cannot save: %w\ndata: %w", err, note)
 		response(w, "handler cannot save...", http.StatusBadRequest, err.Error(), nil)
@@ -86,7 +86,7 @@ func (n *note) Create(w http.ResponseWriter, r *http.Request) {
 	response(w, "save ok", http.StatusCreated, nil, note)
 }
 
-// Delete note in database.
+// Delete note in postgres.
 func (n *note) Delete(w http.ResponseWriter, r *http.Request) {
 	n.logger.Infoln("Handler DeleteNote")
 	w.Header().Set("Content-Type", "application/json")
@@ -99,7 +99,7 @@ func (n *note) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id, _ := strconv.Atoi(sid)
-	err := database.DeleteNote(httpContext, id)
+	err := n.repository.Delete(httpContext, id)
 	if err != nil {
 		n.logger.Errorf("handler DeleteNote error delete: %s. id: %d", err.Error(), id)
 		response(w, fmt.Sprintf("cannot delete note with id: %d", id), http.StatusBadRequest, err.Error(), nil)
