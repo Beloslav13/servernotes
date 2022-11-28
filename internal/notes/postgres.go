@@ -27,7 +27,13 @@ func (r *repository) Create(ctx context.Context, n *models.Note) (int, error) {
 	defer db.Close()
 
 	// TODO: Необходимо реализовать запрет на создание одинаковых заметок по name
-	q := `INSERT INTO notes (person_id, category_id, name) VALUES ($1, $2, $3) RETURNING id`
+	q := `
+		INSERT INTO
+		    notes (person_id, category_id, name)
+		VALUES
+		    ($1, $2, $3)
+		RETURNING id
+		`
 	var id int
 	if err := db.QueryRowContext(ctx, q, n.PersonId, n.CategoryId, n.Name).Scan(&id); err != nil {
 		r.logger.Errorf("cannot save note: %v", err)
@@ -45,7 +51,14 @@ func (r *repository) Get(ctx context.Context, id int) (*models.Note, error) {
 	defer db.Close()
 
 	var n models.Note
-	q := `SELECT * FROM notes WHERE id = $1`
+	q := `
+		SELECT
+		    id, person_id, category_id, name, created
+		FROM 
+		    notes
+		WHERE 
+		    id = $1
+		`
 
 	if err := db.QueryRowContext(ctx, q, id).Scan(&n.Id, &n.PersonId, &n.CategoryId, &n.Name, &n.Created); err != nil {
 		r.logger.Errorf("err: %v, id: %d", err, id)
@@ -62,7 +75,13 @@ func (r *repository) GetAll(ctx context.Context) (*[]models.Note, error) {
 	defer db.Close()
 
 	notes := make([]models.Note, 0)
-	q := `SELECT * FROM notes ORDER BY id ASC`
+	q := `
+		SELECT
+		    id,person_id, category_id, name, created
+		FROM 
+		    notes
+		ORDER BY id ASC
+		`
 	rows, err := db.QueryContext(ctx, q)
 	if err != nil {
 		r.logger.Errorf("err: %v", err)
@@ -93,7 +112,13 @@ func (r *repository) Delete(ctx context.Context, id int) error {
 
 	// Проверяем есть ли заметка с таким айди
 	var exist bool
-	q := `SELECT id FROM notes WHERE id = $1`
+	q := `
+		SELECT
+		    id
+		FROM
+		    notes
+		WHERE id = $1
+		`
 
 	if err := db.QueryRowContext(ctx, q, id).Scan(&exist); err == sql.ErrNoRows {
 		r.logger.Errorf("err: %v, id: %d", err, id)
@@ -101,7 +126,11 @@ func (r *repository) Delete(ctx context.Context, id int) error {
 	}
 
 	// Если заметка с переданным айди есть - удаляем
-	q = `DELETE FROM notes WHERE id = $1`
+	q = `
+		DELETE FROM
+           notes
+		WHERE id = $1
+	   `
 
 	if _, err := db.ExecContext(ctx, q, id); err != nil {
 		r.logger.Errorf("err: %v, id: %d", err, id)

@@ -24,8 +24,13 @@ func (r *repository) Create(ctx context.Context, p *models.Person) (int, error) 
 	}
 	defer db.Close()
 
-	// TODO: Необходимо реализовать запрет на создание одинаковых заметок по name
-	q := `INSERT INTO persons (tg_user_id, Username) VALUES ($1, $2) RETURNING id`
+	q := `
+		INSERT INTO
+		    persons (tg_user_id, Username)
+		VALUES
+		    ($1, $2)
+		RETURNING id
+		`
 	var id int
 	if err := db.QueryRowContext(ctx, q, p.TgUserId, p.Username).Scan(&id); err != nil {
 		r.logger.Errorf("cannot save person: %v", err)
