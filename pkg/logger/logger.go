@@ -26,6 +26,6 @@ func logrusConfig(l *logrus.Logger) *logrus.Logger {
 	}
 
 	l.SetFormatter(formatter)
-	l.SetLevel(logrus.DebugLevel)
+	l.SetLevel(logrus.TraceLevel)
 	return l
 }

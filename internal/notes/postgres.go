@@ -34,6 +34,8 @@ func (r *repository) Create(ctx context.Context, n *models.Note) (int, error) {
 		    ($1, $2, $3)
 		RETURNING id
 		`
+	r.logger.Trace(`INSERT INTO notes (person_id, category_id, name) VALUES ($1, $2, $3) RETURNING id`)
+
 	var id int
 	if err := db.QueryRowContext(ctx, q, n.PersonId, n.CategoryId, n.Name).Scan(&id); err != nil {
 		r.logger.Errorf("cannot save note: %v", err)
@@ -59,6 +61,7 @@ func (r *repository) Get(ctx context.Context, id int) (*models.Note, error) {
 		WHERE 
 		    id = $1
 		`
+	r.logger.Trace(`SELECT id, person_id, category_id, name, created FROM notes WHERE  id = $1`)
 
 	if err := db.QueryRowContext(ctx, q, id).Scan(&n.Id, &n.PersonId, &n.CategoryId, &n.Name, &n.Created); err != nil {
 		r.logger.Errorf("err: %v, id: %d", err, id)
@@ -77,11 +80,13 @@ func (r *repository) GetAll(ctx context.Context) (*[]models.Note, error) {
 	notes := make([]models.Note, 0)
 	q := `
 		SELECT
-		    id,person_id, category_id, name, created
+		    id, person_id, category_id, name, created
 		FROM 
 		    notes
 		ORDER BY id ASC
 		`
+	r.logger.Trace(`SELECT id,person_id, category_id, name, created FROM notes ORDER BY id ASC `)
+
 	rows, err := db.QueryContext(ctx, q)
 	if err != nil {
 		r.logger.Errorf("err: %v", err)
@@ -119,6 +124,7 @@ func (r *repository) Delete(ctx context.Context, id int) error {
 		    notes
 		WHERE id = $1
 		`
+	r.logger.Trace(`SELECT id FROM notes WHERE id = $1`)
 
 	if err := db.QueryRowContext(ctx, q, id).Scan(&exist); err == sql.ErrNoRows {
 		r.logger.Errorf("err: %v, id: %d", err, id)
@@ -131,6 +137,7 @@ func (r *repository) Delete(ctx context.Context, id int) error {
            notes
 		WHERE id = $1
 	   `
+	r.logger.Trace(`DELETE FROM notes WHERE id = $1`)
 
 	if _, err := db.ExecContext(ctx, q, id); err != nil {
 		r.logger.Errorf("err: %v, id: %d", err, id)

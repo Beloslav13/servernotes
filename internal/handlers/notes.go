@@ -28,6 +28,29 @@ func (n *note) Register(router *mux.Router) {
 	http.Handle("/", router)
 }
 
+// Create note in postgres.
+func (n *note) Create(w http.ResponseWriter, r *http.Request) {
+	n.logger.Infoln("Handler CreateNote")
+	w.Header().Set("Content-Type", "application/json")
+
+	var note models.Note
+	_ = json.NewDecoder(r.Body).Decode(&note)
+
+	// Если валидация структуры прошла успешно, создаём заметку в БД.
+	if n.Validate(w, note) {
+		return
+	}
+	id, err := n.repository.Create(httpContext, &note)
+	if err != nil {
+		n.logger.Errorf("handler cannot save: %w\ndata: %w", err, note)
+		response(w, "handler cannot save...", http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+	note.Id = uint(id)
+	// Заметка создана в бд без ошибок, создаём json ответ
+	response(w, "save ok", http.StatusCreated, nil, note)
+}
+
 // Get note in postgres.
 func (n *note) Get(w http.ResponseWriter, r *http.Request) {
 	n.logger.Infoln("Handler GetNote")
@@ -61,29 +84,6 @@ func (n *note) GetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response(w, "get all ok", http.StatusOK, nil, notes)
-}
-
-// Create note in postgres.
-func (n *note) Create(w http.ResponseWriter, r *http.Request) {
-	n.logger.Infoln("Handler CreateNote")
-	w.Header().Set("Content-Type", "application/json")
-
-	var note models.Note
-	_ = json.NewDecoder(r.Body).Decode(&note)
-
-	// Если валидация структуры прошла успешно, создаём заметку в БД.
-	if n.Validate(w, note) {
-		return
-	}
-	id, err := n.repository.Create(httpContext, &note)
-	if err != nil {
-		n.logger.Errorf("handler cannot save: %w\ndata: %w", err, note)
-		response(w, "handler cannot save...", http.StatusBadRequest, err.Error(), nil)
-		return
-	}
-	note.Id = uint(id)
-	// Заметка создана в бд без ошибок, создаём json ответ
-	response(w, "save ok", http.StatusCreated, nil, note)
 }
 
 // Delete note in postgres.

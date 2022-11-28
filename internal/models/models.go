@@ -3,9 +3,10 @@ package models
 import "time"
 
 type Person struct {
-	Id       uint   `json:"id"`
-	TgUserId uint   `json:"tg_user_id" validate:"required"`
-	Username string `json:"username" validate:"required"`
+	Id       uint      `json:"id"`
+	TgUserId uint      `json:"tg_user_id" validate:"required"`
+	Username string    `json:"username" validate:"required"`
+	Created  time.Time `json:"created"`
 }
 
 func (p *Person) SetId(id uint) {
@@ -13,9 +14,10 @@ func (p *Person) SetId(id uint) {
 }
 
 type Category struct {
-	Id       uint   `json:"id"`
-	PersonId uint   `json:"person_id" validate:"required"`
-	Name     string `json:"name" validate:"required"`
+	Id       uint      `json:"id"`
+	PersonId uint      `json:"person_id" validate:"required"`
+	Name     string    `json:"name" validate:"required"`
+	Created  time.Time `json:"created"`
 }
 
 type Note struct {
